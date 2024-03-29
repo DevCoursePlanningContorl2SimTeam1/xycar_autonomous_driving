@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "Controller.hpp"
+#include "LaneKeepingSystem/Controller.hpp"
 
 namespace Xycar {
 /**
@@ -24,10 +24,6 @@ template <typename PREC>
 class StanleyController : public Controller<PREC>
 {
 public:
-    /**
-     *  이 코드는 예제로서, 알맞은 방법으로 자유롭게 수정하셔야 합니다
-     */
-
     /**
      *
      * @brief Construct a new Stanley Controller object
@@ -46,10 +42,11 @@ public:
      * @return
      */
     void calculateSteeringAngle(PREC crossTrackError, PREC headingError, PREC velocity);
-
+    // double getResult(){return mResult;}
 private:
-    double mGain;              ///< Stanley control gain
-    double mLookAheadDistance; ///< Look-ahead distance
+    PREC mGain;              ///< Stanley control gain
+    PREC mLookAheadDistance;
+    // PREC mResult; ///< Look-ahead distance
 };
 } // namespace Xycar
 #endif // STANLEY_CONTROLLER_HPP_
