@@ -32,6 +32,7 @@ void HoughTransformLaneDetector<PREC>::setConfiguration(const YAML::Node& config
     mHoughMinLineLength = config["HOUGH"]["MIN_LINE_LENGTH"].as<int32_t>();
     mHoughMaxLineGap = config["HOUGH"]["MAX_LINE_GAP"].as<int32_t>();
     mDebugging = config["DEBUG"].as<bool>();
+    mLaneWidth = config["HOUGH"]["LANE_WIDTH"].as<int32_t>();
 }
 
 template <typename PREC>
@@ -71,9 +72,9 @@ int32_t HoughTransformLaneDetector<PREC>::getLinePositionX(const Lines& lines, c
     if (std::abs(m) <= std::numeric_limits<PREC>::epsilon() && std::abs(b) <= std::numeric_limits<PREC>::epsilon())
     {
         if (direction == Direction::LEFT)
-            return 0.0f;
+            return 0.0f - mLaneWidth;
         else if (direction == Direction::RIGHT)
-            return static_cast<PREC>(mImageWidth);
+            return static_cast<PREC>(mImageWidth) + mLaneWidth;
     }
 
     PREC y = static_cast<PREC>(mROIHeight) * 0.5f;
@@ -106,12 +107,12 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
         else
             slope = static_cast<PREC>(y2 - y1) / (x2 - x1);
 
-        if (-mHoughLineSlopeRange <= slope && slope < 0.0f)
+        if (-mHoughLineSlopeRange <= slope && slope < -0.1f)
         {
             leftLineSumX += static_cast<PREC>(x1 + x2) * 0.5f;
             leftLineIndices.emplace_back(i);
         }
-        else if (0.0f < slope && slope <= mHoughLineSlopeRange)
+        else if (0.1f < slope && slope <= mHoughLineSlopeRange)
         {
             rightLineSumX += static_cast<PREC>(x1 + x2) * 0.5f;
             rightLineIndices.emplace_back(i);
@@ -137,16 +138,10 @@ std::pair<Indices, Indices> HoughTransformLaneDetector<PREC>::divideLines(const 
 }
 
 template <typename PREC>
-std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(const cv::Mat& image)
+std::pair<int32_t, int32_t> HoughTransformLaneDetector<PREC>::getLanePosition(const cv::Mat& image, const cv::Mat& edgedRoiImage)
 {
-    cv::Mat grayImage;
-    cv::cvtColor(image, grayImage, cv::COLOR_BGR2GRAY);
-
-    cv::Mat cannyImage;
-    cv::Canny(grayImage, cannyImage, mCannyEdgeLowThreshold, mCannyEdgeHighThreshold);
-    cv::Mat ROI = cannyImage(cv::Rect(0, mROIStartHeight, mImageWidth, mROIHeight));
     Lines allLines;
-    cv::HoughLinesP(ROI, allLines, kHoughRho, kHoughTheta, mHoughThreshold, mHoughMinLineLength, mHoughMaxLineGap);
+    cv::HoughLinesP(edgedRoiImage, allLines, kHoughRho, kHoughTheta, mHoughThreshold, mHoughMinLineLength, mHoughMaxLineGap);
 
     if (mDebugging)
         image.copyTo(mDebugFrame);

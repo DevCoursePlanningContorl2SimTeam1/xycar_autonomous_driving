@@ -79,7 +79,7 @@ public:
      * @param[in] image Image for searching lane position
      * @return Left x position and Right x position
      */
-    std::pair<int32_t, int32_t> getLanePosition(const cv::Mat& image);
+    std::pair<int32_t, int32_t> getLanePosition(const cv::Mat& image, const cv::Mat& edgedRoiImage);
 
     /**
      * @brief Draw the position rectangles on debug image
@@ -154,6 +154,8 @@ private:
     int32_t mImageHeight;    ///< The height of the image
     int32_t mROIStartHeight; ///< The height of the offset for debugging
     int32_t mROIHeight;      ///< Height of ROI
+
+    int32_t mLaneWidth; ///< The width of the lane
 
     // Debug Image and flag
     cv::Mat mDebugFrame; ///< The frame for debugging
